@@ -1,0 +1,38 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Build Docker image
+        run: docker build -t devops-dashboard-backend .
+
+      - name: Push Docker image to Docker Hub
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          tags: yourdockerhubusername/devops-dashboard-backend:latest
+          # You need to set DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets in your repo settings
+
+      - name: SSH to EC2 and deploy
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ec2-user
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker pull yourdockerhubusername/devops-dashboard-backend:latest
+            docker stop devops-backend || true
+            docker rm devops-backend || true
+            docker run -d -p 3000:3000 --name devops-backend yourdockerhubusername/devops-dashboard-backend:latest
+
