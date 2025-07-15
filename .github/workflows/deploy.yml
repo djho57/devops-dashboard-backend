@@ -34,5 +34,8 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            do
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/devops-dashboard-backend:latest
+            docker stop devops-backend || true
+            docker rm devops-backend || true
+            docker run -d -p 3000:3000 --name devops-backend ${{ secrets.DOCKERHUB_USERNAME }}/devops-dashboard-backend:latest
 
