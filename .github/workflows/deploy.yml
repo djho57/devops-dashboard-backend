@@ -14,15 +14,18 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      - name: Build Docker image
-        run: docker build -t devops-dashboard-backend .
-
-      - name: Push Docker image to Docker Hub
-        uses: docker/build-push-action@v4
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
         with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
           push: true
-          tags: yourdockerhubusername/devops-dashboard-backend:latest
-          # You need to set DOCKERHUB_USERNAME and DOCKERHUB_TOKEN secrets in your repo settings
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/devops-dashboard-backend:latest
 
       - name: SSH to EC2 and deploy
         uses: appleboy/ssh-action@v0.1.7
@@ -31,8 +34,5 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker pull yourdockerhubusername/devops-dashboard-backend:latest
-            docker stop devops-backend || true
-            docker rm devops-backend || true
-            docker run -d -p 3000:3000 --name devops-backend yourdockerhubusername/devops-dashboard-backend:latest
+            do
 
